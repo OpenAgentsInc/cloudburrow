@@ -36,6 +36,12 @@ Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudf
 
 - Docs reviewed: `~/code/openagents/docs/tunnel/` (Cloudflare named setup, broker notes, WS token auth guidance).
 - Related work: Cloudflare Tunnel migration, broker patterns, and MCP tooling approaches discussed in the OpenAgentsInc/openagents repository.
+- Status (2025‑10‑28):
+  - Worker deployed at `https://cloudburrow-broker.openagents.com` (Custom Domain bound)
+  - REST endpoints live: `POST /tunnels`, `GET /tunnels/:id/status`, `DELETE /tunnels/:id`
+  - MCP tools wired to broker: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`
+  - Verified E2E: minted tunnel, ran `cloudflared` on desktop, status=connected, WebSocket handshake to `wss://<hostname>/ws`
+  - Desktop helper available: `bun run tunnel` to mint + run connector and print WSS URL
 - Internal notes: `docs/chats/20251028-1700-initial.md` captures initial positioning, packaging, and MCP integration discussion.
 
 ## Quickstart (Bun)
