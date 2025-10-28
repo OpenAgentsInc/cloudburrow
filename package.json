@@ -3,7 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "wrangler": "^3.89.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.9",
+    "mcp-lite": "^0.2.0"
   },
   "peerDependencies": {
     "typescript": "^5"

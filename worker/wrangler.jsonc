@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudburrow-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-28",
+  "compatibility_flags": ["nodejs_compat"],
+  // Optional defaults; set via UI or wrangler secret/var
+  // "vars": {
+  //   "TUNNEL_HOST_PREFIX": "tunnel-",
+  //   "TUNNEL_HOST_SUFFIX": "example.com"
+  // }
+}
+
