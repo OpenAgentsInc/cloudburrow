@@ -8,11 +8,26 @@ Overview
 Local Dev
 - Install deps at repo root: `bun install`
 - Use Wrangler for dev: `bun x wrangler dev --config worker/wrangler.jsonc`
+- For local dev secrets, create `worker/.dev.vars` with:
+  - `CF_ACCOUNT_ID=...`
+  - `CF_ZONE_ID=...`
+  - `CF_API_TOKEN=...`
+  (This file is git-ignored.)
 
 Deploy (Cloudflare)
 - Set `compatibility_date` and name in `worker/wrangler.jsonc`
 - Configure secrets/vars (see root README for required keys)
 - Deploy: `bun x wrangler deploy --config worker/wrangler.jsonc`
+
+Cloudflare UI: bind custom domain and secrets
+- Secrets: Workers & Pages → your worker → Settings → Variables → Add secrets
+  - CF_API_TOKEN, CF_ACCOUNT_ID, CF_ZONE_ID
+- Vars (non-secret): Workers & Pages → your worker → Settings → Variables
+  - TUNNEL_HOST_PREFIX=cloudburrow-
+  - TUNNEL_HOST_SUFFIX=openagents.com
+- Route binding: Workers & Pages → your worker → Triggers → Routes → Add route
+  - Route: `cloudburrow-broker.openagents.com/*`
+  - Zone: `openagents.com`
 
 Test the MCP endpoint
 - List tools via JSON-RPC:
