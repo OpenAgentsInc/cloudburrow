@@ -8,6 +8,12 @@ Default to using Bun instead of Node.js.
 - Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
 - Bun automatically loads .env, so don't use dotenv.
 
+## Package Management
+
+- Do not manually edit `package.json` to bump versions.
+- Use `bun i` (install) in the repo root to resolve and install the latest versions allowed by semver ranges and update `bun.lock`.
+- When adding packages, prefer `bun add <pkg>` (or `bun add -D <pkg>` for dev deps).
+
 ## APIs
 
 - `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.

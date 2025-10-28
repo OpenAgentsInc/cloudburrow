@@ -4,7 +4,7 @@
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
-    "wrangler": "^3.89.0"
+    "wrangler": "^4.45.1"
   },
   "dependencies": {
     "hono": "^4.6.9",
