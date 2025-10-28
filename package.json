@@ -15,6 +15,7 @@
   },
   "scripts": {
     "dev:worker": "bun x wrangler dev --config worker/wrangler.jsonc",
-    "deploy:worker": "bun x wrangler deploy --config worker/wrangler.jsonc"
+    "deploy:worker": "bun x wrangler deploy --config worker/wrangler.jsonc",
+    "tunnel": "bun desktop-helper.ts"
   }
 }
