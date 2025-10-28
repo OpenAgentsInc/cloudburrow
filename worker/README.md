@@ -31,3 +31,7 @@ Test the MCP endpoint
 Notes
 - This repo uses Bun for scripts and `wrangler` for deploys.
 - See the event docs for MCP client options (e.g., MCP Inspector) to try your server quickly.
+- Defaults baked into `worker/wrangler.jsonc`:
+  - `TUNNEL_HOST_PREFIX=cloudburrow-`
+  - `TUNNEL_HOST_SUFFIX=openagents.com`
+  - Route: `cloudburrow-broker.openagents.com/*` on zone `openagents.com`
