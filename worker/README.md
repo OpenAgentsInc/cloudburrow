@@ -19,6 +19,13 @@ Deploy (Cloudflare)
 - Configure secrets/vars (see root README for required keys)
 - Deploy: `bun x wrangler deploy --config worker/wrangler.jsonc`
 
+API token scopes required for deploy
+- Account → Workers Scripts (Edit)
+- Account → Workers Routes (Edit) (for route binding)
+- Zone → DNS (Edit) and Zone (Read) (for custom domain / route)
+- Account → Cloudflare Tunnel (Edit) (needed once broker endpoints are implemented)
+- Optional: Account → Workers KV (Edit) if adapters are added later
+
 Cloudflare UI: bind custom domain and secrets
 - Secrets: Workers & Pages → your worker → Settings → Variables → Add secrets
   - CF_API_TOKEN, CF_ACCOUNT_ID, CF_ZONE_ID
