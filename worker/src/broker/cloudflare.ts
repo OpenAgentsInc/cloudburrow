@@ -106,13 +106,16 @@ export async function createNamedTunnel(deviceHint?: string): Promise<CreateTunn
     );
   }
 
-  // 4) Configure remote ingress so the token-based connector forwards to 127.0.0.1:8787
+  // 4) Configure remote ingress so the token-based connector forwards:
+  //    - https://<hostname>/convex  -> http://127.0.0.1:7788 (Convex)
+  //    - https://<hostname>/*       -> http://127.0.0.1:8787 (Bridge, incl /ws)
   const cfgRes = await fetch(`${API_BASE}/accounts/${accountId}/cfd_tunnel/${tunnelId}/configurations`, {
     method: 'PUT',
     headers: authHeaders(),
     body: JSON.stringify({
       config_src: 'cloudflare',
       ingress: [
+        { hostname, path: '/convex', service: 'http://127.0.0.1:7788' },
         { hostname, service: 'http://127.0.0.1:8787' },
         { service: 'http_status:404' },
       ],

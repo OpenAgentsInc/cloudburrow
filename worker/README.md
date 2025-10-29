@@ -36,6 +36,12 @@ Cloudflare UI: bind custom domain and secrets
   - Route: `cloudburrow-broker.openagents.com/*`
   - Zone: `openagents.com`
 
+Tunnel routing
+- The Worker configures remote ingress for each minted tunnel so that a single hostname serves both the bridge and your Convex backend:
+  - `https://<hostname>/convex` → `http://127.0.0.1:7788` (Convex HTTP/WS)
+  - `https://<hostname>/*` → `http://127.0.0.1:8787` (Bridge, including `/ws`)
+- When using token-based `cloudflared tunnel run --token`, do NOT pass `--url`; the remote ingress above is applied automatically.
+
 Test the MCP endpoint
 - List tools via JSON-RPC:
   ```sh

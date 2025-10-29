@@ -84,11 +84,11 @@ async function main() {
   }
 
   // Launch cloudflared connector
+  // IMPORTANT: do not pass --url when using a token with remotely managed ingress.
+  // The Worker sets ingress so that:
+  //   - https://<hostname>/convex -> http://127.0.0.1:7788
+  //   - https://<hostname>/*      -> http://127.0.0.1:8787
   const args = ['tunnel', 'run', '--no-autoupdate', '--protocol', 'http2', '--proxy-keepalive-connections', '1', '--token', out.token];
-  // Attempt to provide origin for forwarding; ignored if not supported in this mode
-  if (localUrl) {
-    args.push('--url', localUrl);
-  }
   log(`Starting cloudflared: cloudflared ${args.join(' ')}`);
   const env = { ...process.env } as Record<string,string>;
   delete env.HTTP_PROXY; delete env.HTTPS_PROXY; delete env.ALL_PROXY;
@@ -96,8 +96,10 @@ async function main() {
   const child = Bun.spawn(['cloudflared', ...args], { stdout: 'inherit', stderr: 'inherit', env });
 
   const wss = `wss://${out.hostname}/ws`;
+  const convexUrl = `https://${out.hostname}/convex`;
   log('Connector started (press Ctrl+C to stop)');
   log(`Public bridge: ${wss}`);
+  log(`Public convex: ${convexUrl}`);
 
   const onSig = () => {
     log('Shutting down...');
