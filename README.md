@@ -32,27 +32,21 @@ In plain English, here’s what you can do right now:
 - WebSocket token gating on the desktop bridge (`/ws`) to enforce authenticated connections.
 - Optional MCP tools hosted on the same Worker to manage tunnel lifecycle from the chat stream without exposing connector secrets.
 
-## Components
+## Components (Plain Language)
 
-- Cloudflare Tunnel Broker (Worker)
-  - Mints named tunnels via Cloudflare Zero Trust API and assigns DNS: `tunnel-<rand>.openagents.com`.
-  - Returns a connector token (for `cloudflared tunnel run --token …`) and the hostname to the desktop.
-  - Endpoints: `POST /tunnels`, `GET /tunnels/:id/status`, `DELETE /tunnels/:id`.
-  - Security: API token stored as a Worker secret; minimal auth for public endpoints; no token leakage in MCP.
+- Worker (Broker + MCP)
+  - Lives on Cloudflare. It’s the control plane that can create a named tunnel, tell you the public hostname, check status, and revoke it.
+  - Exposes two interfaces: REST endpoints (for the desktop to fetch the connector token and run `cloudflared`) and MCP tools (for agents/apps to drive lifecycle without seeing secrets).
+  - Keeps your Cloudflare API token safe; tokens never appear in MCP responses.
 
-- Client Integration (one‑command)
-  - Auto‑install `cloudflared` to a user directory if missing.
-  - Call the broker to mint a tunnel and persist `{ token, hostname, tunnelId }`.
-  - Launch the connector and emit a pairing payload with `provider: "cloudflare"` and `bridge: wss://<hostname>/ws`.
-  
+- Bridge (Desktop)
+  - Runs on your machine. It asks the Worker’s REST API for a tunnel token and hostname, then starts `cloudflared` so the tunnel points to your local app (e.g., `http://127.0.0.1:8787`).
+  - The result is a stable public URL `wss://<hostname>/ws` that forwards to your local service.
+  - Can add auth on the `/ws` endpoint so only authorized clients connect.
 
-- Desktop Bridge (Rust, `/ws`)
-  - Requires a bridge token via `Authorization: Bearer` or `?token=`.
-  - Rejects unauthenticated sockets; provisions/persists token on first run.
-
-- MCP Tools on the Worker (optional)
-  - Example tools: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`.
-  - Provide visibility and control in demos; never return connector tokens.
+- Client (Agent/App)
+  - Anything that can talk MCP. It asks the Worker (via MCP) to create a tunnel, shows/uses the announced `wss://…/ws` link, checks status, and revokes when finished.
+  - It never handles the tunnel token; the desktop bridge handles that via the Worker’s REST.
 
 ## Current Status
 
