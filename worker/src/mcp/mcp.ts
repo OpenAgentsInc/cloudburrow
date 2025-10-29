@@ -15,11 +15,6 @@ server.tool('tunnel.announce_link', {
     properties: { hostname: { type: 'string' } },
     required: ['hostname'],
   },
-  outputSchema: {
-    type: 'object',
-    properties: { wss: { type: 'string' } },
-    required: ['wss'],
-  },
   handler: (args: { hostname: string }) => ({
     content: [{ type: 'text', text: `wss://${args.hostname}/ws` }],
     structuredContent: { wss: `wss://${args.hostname}/ws` },
@@ -31,15 +26,6 @@ server.tool('tunnel.create_named', {
   inputSchema: {
     type: 'object',
     properties: { deviceHint: { type: 'string' } },
-  },
-  outputSchema: {
-    type: 'object',
-    properties: {
-      tunnelId: { type: 'string' },
-      hostname: { type: 'string' },
-      createdAt: { type: 'string' },
-    },
-    required: ['tunnelId', 'hostname', 'createdAt'],
   },
   handler: async (args: { deviceHint?: string }) => {
     const { tunnelId, hostname, createdAt } = await createNamedTunnel(args?.deviceHint);
@@ -59,10 +45,6 @@ server.tool('tunnel.status', {
     properties: { tunnelId: { type: 'string' } },
     required: ['tunnelId'],
   },
-  outputSchema: {
-    type: 'object',
-    properties: { connected: { type: 'boolean' }, lastSeen: { type: 'string' } },
-  },
   handler: async (args: { tunnelId: string }) => {
     const out = await getTunnelStatus(args.tunnelId);
     return {
@@ -80,11 +62,6 @@ server.tool('tunnel.revoke', {
     type: 'object',
     properties: { tunnelId: { type: 'string' }, hostname: { type: 'string' } },
     required: ['tunnelId'],
-  },
-  outputSchema: {
-    type: 'object',
-    properties: { ok: { type: 'boolean' } },
-    required: ['ok'],
   },
   handler: async (args: { tunnelId: string; hostname?: string }) => {
     const out = await revokeTunnel(args.tunnelId, args.hostname);

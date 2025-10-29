@@ -106,6 +106,23 @@ export async function createNamedTunnel(deviceHint?: string): Promise<CreateTunn
     );
   }
 
+  // 4) Configure remote ingress so the token-based connector forwards to 127.0.0.1:8787
+  const cfgRes = await fetch(`${API_BASE}/accounts/${accountId}/cfd_tunnel/${tunnelId}/configurations`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      config_src: 'cloudflare',
+      ingress: [
+        { hostname, service: 'http://127.0.0.1:8787' },
+        { service: 'http_status:404' },
+      ],
+    }),
+  });
+  if (!cfgRes.ok) {
+    const body = await cfgRes.text();
+    // Non-fatal: continue, but connector may rely on local --url
+  }
+
   return { tunnelId, hostname, token, createdAt: new Date().toISOString() };
 }
 
@@ -172,4 +189,3 @@ export async function revokeTunnel(tunnelId: string, hostname?: string) {
   }
   return { ok: true } as const;
 }
-

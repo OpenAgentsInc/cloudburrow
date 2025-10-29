@@ -84,13 +84,16 @@ async function main() {
   }
 
   // Launch cloudflared connector
-  const args = ['tunnel', 'run', '--no-autoupdate', '--token', out.token];
+  const args = ['tunnel', 'run', '--no-autoupdate', '--protocol', 'http2', '--proxy-keepalive-connections', '1', '--token', out.token];
   // Attempt to provide origin for forwarding; ignored if not supported in this mode
   if (localUrl) {
     args.push('--url', localUrl);
   }
   log(`Starting cloudflared: cloudflared ${args.join(' ')}`);
-  const child = Bun.spawn(['cloudflared', ...args], { stdout: 'inherit', stderr: 'inherit' });
+  const env = { ...process.env } as Record<string,string>;
+  delete env.HTTP_PROXY; delete env.HTTPS_PROXY; delete env.ALL_PROXY;
+  delete (env as any).http_proxy; delete (env as any).https_proxy; delete (env as any).all_proxy;
+  const child = Bun.spawn(['cloudflared', ...args], { stdout: 'inherit', stderr: 'inherit', env });
 
   const wss = `wss://${out.hostname}/ws`;
   log('Connector started (press Ctrl+C to stop)');
@@ -113,4 +116,3 @@ main().catch((err) => {
   console.error('[desktop] error:', err?.message || err);
   process.exit(1);
 });
-

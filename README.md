@@ -57,3 +57,25 @@ Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudf
   ```
 
 This repo currently scaffolds the project and documentation. Broker, client integration, and MCP endpoints will be added incrementally with Bun‑first tooling.
+
+## Cloudflare Worker (Broker)
+
+- Deploy/dev commands (Wrangler via Bun):
+  - Dev: `bun run dev:worker`
+  - Deploy: `bun run deploy:worker`
+
+- Required secrets on the Worker:
+  - `CF_API_TOKEN` — API Token with Tunnel + DNS write for the account/zone
+  - `CF_ACCOUNT_ID` — Cloudflare account id
+  - `CF_ZONE_ID` — Zone id for your domain (e.g., `openagents.com`)
+  - Optional `BROKER_KEY` — if set, broker endpoints require `Authorization: Bearer <BROKER_KEY>`
+
+- One‑liners to set secrets (no need to pass `--name`):
+  - `bun run cf:secret:api-token`
+  - `bun run cf:secret:account-id`
+  - `bun run cf:secret:zone-id`
+  - `bun run cf:secret:broker-key`
+
+Notes:
+- The Worker config lives at `worker/wrangler.jsonc`. Scripts pass `--config worker/wrangler.jsonc` so you don’t have to.
+- Custom domain is bound for `cloudburrow-broker.openagents.com` → the Worker.

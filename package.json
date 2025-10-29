@@ -16,6 +16,10 @@
   "scripts": {
     "dev:worker": "bun x wrangler dev --config worker/wrangler.jsonc",
     "deploy:worker": "bun x wrangler deploy --config worker/wrangler.jsonc",
-    "tunnel": "bun desktop-helper.ts"
+    "tunnel": "bun desktop-helper.ts",
+    "cf:secret:api-token": "bun x wrangler secret put CF_API_TOKEN --config worker/wrangler.jsonc",
+    "cf:secret:account-id": "bun x wrangler secret put CF_ACCOUNT_ID --config worker/wrangler.jsonc",
+    "cf:secret:zone-id": "bun x wrangler secret put CF_ZONE_ID --config worker/wrangler.jsonc",
+    "cf:secret:broker-key": "bun x wrangler secret put BROKER_KEY --config worker/wrangler.jsonc"
   }
 }
