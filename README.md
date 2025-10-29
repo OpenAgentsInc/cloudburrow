@@ -83,6 +83,29 @@ In plain English, here’s what you can do right now:
 
 This repo currently scaffolds the project and documentation. Broker, client integration, and MCP endpoints will be added incrementally with Bun‑first tooling.
 
+## MCP Tools
+
+- `tunnel.announce_link`
+  - Input: `{ hostname: string }`
+  - Returns: `wss://<hostname>/ws` as a structured link for clients to display or use.
+  - Notes: No tunnel is created; this only formats the public WebSocket URL for a host.
+
+- `tunnel.create_named`
+  - Input: `{ deviceHint?: string }`
+  - Creates a named Cloudflare Tunnel and DNS CNAME (proxied) for a unique hostname.
+  - Returns: `{ tunnelId: string, hostname: string, createdAt: string }`
+  - Notes: The connector `token` is never returned by MCP (by design). Use broker REST to run a connector.
+
+- `tunnel.status`
+  - Input: `{ tunnelId: string }`
+  - Checks whether a connector is currently attached to the tunnel.
+  - Returns: `{ connected: boolean, lastSeen?: string }`
+
+- `tunnel.revoke`
+  - Input: `{ tunnelId: string, hostname?: string }`
+  - Deletes the Cloudflare Tunnel and attempts best‑effort DNS cleanup if `hostname` provided.
+  - Returns: `{ ok: true }` on success.
+
 ## MCP Tools Test Script
 
 Use the included script to exercise the MCP server running on the Cloudflare Worker.
