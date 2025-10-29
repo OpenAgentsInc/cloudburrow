@@ -1,5 +1,5 @@
 # Cloudburrow
-_Cloudflare Tunnel + MCPs_
+_Tunnels as a Primitive — Cloudflare + MCPs_
 
 Cloudburrow enables secure, per‑device Cloudflare Tunnel connections between a desktop “bridge” and MCP‑enabled clients (e.g., a mobile app or other agents). It focuses on a one‑command pairing flow, stable `wss://` endpoints, and optional MCP tools exposed on a Cloudflare Worker for observability and remote control — with no coupling to any specific client.
 
@@ -20,6 +20,9 @@ In plain English, here’s what you can do right now:
   - You get predictable hostnames and can enforce policy and cleanup, instead of ad-hoc ephemeral URLs.
 - Designed for automation
   - Scriptable with `bun` and JSON-RPC; easy to embed in workflows, CI, or agent runtimes.
+
+- Agent-native, device‑to‑device primitive
+  - If bridges can operate without per‑device centralized accounts, tunnels become a reusable building block for agents to form on‑demand device‑to‑device links. MCP acts as the control plane (create/status/revoke), while the tunnel is the data plane (`wss://…/ws`).
 
 ## What We’re Building
 
