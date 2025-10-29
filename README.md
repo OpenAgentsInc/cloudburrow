@@ -8,6 +8,19 @@ In plain English, here’s what you can do right now:
 - Ask the MCP server to create a tunnel, tell you the public link, check if it’s connected, and revoke it when you’re done.
 - Use these tools from any MCP‑compatible client without ever exposing connector tokens in chat.
 
+## Why It Matters
+
+- No per-device signup flow
+  - The person running the desktop app doesn’t need to create a tunnel provider account or share credentials. A single Cloudflare account (yours) powers everything behind the scenes via the Worker.
+- Runs on Cloudflare’s global edge
+  - Uses Cloudflare Tunnels + DNS on your zone for stable, first-class hostnames. No opaque URLs, no NAT trickery that breaks across networks.
+- Remote control via MCP
+  - Create, check, and revoke tunnels directly from any MCP-capable client (agents, apps, scripts) without exposing secrets. Tokens never leave the server.
+- Named tunnels, not “quick” or transient links
+  - You get predictable hostnames and can enforce policy and cleanup, instead of ad-hoc ephemeral URLs.
+- Designed for automation
+  - Scriptable with `bun` and JSON-RPC; easy to embed in workflows, CI, or agent runtimes.
+
 ## What We’re Building
 
 - Secure device pairing via named Cloudflare Tunnels (no Quick Tunnel).
