@@ -1,4 +1,5 @@
 # Cloudburrow
+_Cloudflare Tunnel + MCPs_
 
 Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudflare Tunnel connections between a desktop “bridge” and MCP‑enabled clients (e.g., a mobile app or other agents). It focuses on a one‑command pairing flow, stable `wss://` endpoints, and optional MCP tools exposed on a Cloudflare Worker for observability and remote control — with no coupling to any specific client.
 
