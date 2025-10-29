@@ -32,17 +32,16 @@ Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudf
   - Example tools: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`.
   - Provide visibility and control in demos; never return connector tokens.
 
-## Current Status and References
+## Current Status
 
-- Docs reviewed: `~/code/openagents/docs/tunnel/` (Cloudflare named setup, broker notes, WS token auth guidance).
-- Related work: Cloudflare Tunnel migration, broker patterns, and MCP tooling approaches discussed in the OpenAgentsInc/openagents repository.
-- Status (2025‑10‑28):
-  - Worker deployed at `https://cloudburrow-broker.openagents.com` (Custom Domain bound)
-  - REST endpoints live: `POST /tunnels`, `GET /tunnels/:id/status`, `DELETE /tunnels/:id`
-  - MCP tools wired to broker: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`
-  - Verified E2E: minted tunnel, ran `cloudflared` on desktop, status=connected, WebSocket handshake to `wss://<hostname>/ws`
-  - Desktop helper available: `bun run tunnel` to mint + run connector and print WSS URL
-- Internal notes: `docs/chats/20251028-1700-initial.md` captures initial positioning, packaging, and MCP integration discussion.
+- Broker online: `https://cloudburrow-broker.openagents.com` (custom domain bound to the Worker).
+- Endpoints working:
+  - `POST /tunnels` → returns `{ tunnelId, hostname, token }`
+  - `GET /tunnels/:id/status`
+  - `DELETE /tunnels/:id`
+- MCP endpoint `/mcp` is enabled with tools: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`.
+- DNS propagation for newly minted hostnames typically completes within ~5–10 seconds.
+- Desktop helper available: `bun run tunnel` to mint + run a connector and print the public `wss://…/ws` URL.
 
 ## Quickstart (Bun)
 
@@ -79,3 +78,21 @@ This repo currently scaffolds the project and documentation. Broker, client inte
 Notes:
 - The Worker config lives at `worker/wrangler.jsonc`. Scripts pass `--config worker/wrangler.jsonc` so you don’t have to.
 - Custom domain is bound for `cloudburrow-broker.openagents.com` → the Worker.
+
+## Usage Examples
+
+- Mint a tunnel (returns token + hostname):
+  - `curl -s -X POST https://cloudburrow-broker.openagents.com/tunnels -H 'content-type: application/json' -d '{}' | jq`
+
+- Run a connector locally (HTTP/2 + minimal keepalive):
+  - `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy -u ALL_PROXY -u all_proxy \`
+    `cloudflared tunnel --no-autoupdate run --protocol http2 --proxy-keepalive-connections 1 --token "<TOKEN>" --url http://127.0.0.1:8787`
+
+- Probe public host:
+  - `curl -i https://<HOSTNAME>/`
+
+## Troubleshooting
+
+- QUIC/UDP warnings are expected on restricted networks. We force HTTP/2; look for “Registered tunnel connection … protocol=http2”.
+- If you see “Unable to reach the origin service … 127.0.0.1:8787”, ensure your local service is listening and only one `cloudflared` is running.
+- If DNS hasn’t propagated yet for the hostname, wait a few seconds and retry.
