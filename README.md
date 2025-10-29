@@ -11,7 +11,7 @@ In plain English, here’s what you can do right now:
 ## Why It Matters
 
 - **Agent-native, device‑to‑device primitive**
-  - **If bridges can operate without per‑device centralized accounts, tunnels become a reusable building block for agents to form on‑demand device‑to‑device links. MCP acts as the control plane (create/status/revoke), while the tunnel is the data plane (`wss://…/ws`).**
+  - **If bridges can operate without per‑device centralized accounts, tunnels become a reusable building block for agents to form on‑demand device‑to‑device links.** MCP acts as the control plane (create/status/revoke), while the tunnel is the data plane (`wss://…/ws`).
 - No per-device signup flow
   - The person running the desktop app doesn’t need to create a tunnel provider account or share credentials. A single Cloudflare account (yours) powers everything behind the scenes via the Worker.
 - Runs on Cloudflare’s global edge
