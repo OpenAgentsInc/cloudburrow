@@ -43,6 +43,26 @@ Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudf
 - DNS propagation for newly minted hostnames typically completes within ~5–10 seconds.
 - Desktop helper available: `bun run tunnel` to mint + run a connector and print the public `wss://…/ws` URL.
 
+### Verification Details (what we tested)
+
+- Tunnel mint + DNS
+  - `curl -s -X POST https://cloudburrow-broker.openagents.com/tunnels -H 'content-type: application/json' -d '{}' | jq`
+  - Confirms JSON shape `{ tunnelId, hostname, token }`.
+  - `dig +short <hostname>` resolves to Cloudflare edge IPs (e.g., `104.18.14.36`, `104.18.15.36`) typically within ~5–10s.
+
+- Connector registration (HTTP/2)
+  - Start connector: `cloudflared tunnel --no-autoupdate run --protocol http2 --proxy-keepalive-connections 1 --token "<TOKEN>" --url http://127.0.0.1:8787`
+  - Look for log: `Registered tunnel connection ... protocol=http2` (edge registered). Transient QUIC/UDP warnings are OK.
+
+- Public HTTP reachability
+  - With any local server on `127.0.0.1:8787` (e.g., `bun -e "Bun.serve({port:8787, fetch(){return new Response('ok\n')}}); await new Promise(()=>{})"`),
+  - `curl -i https://<HOSTNAME>/` returns an HTTP response from your local service (2xx/4xx depending on path).
+
+- WebSocket handshake to `/ws`
+  - Local WS server: `bun -e "Bun.serve({port:8787, fetch(r,s){ if(new URL(r.url).pathname==='\/ws') return s.upgrade(r); return new Response('ok');}, websocket:{ open(ws){ws.send('hello');}, message(ws,msg){ws.send('echo:'+msg)} } }); await new Promise(()=>{})"`
+  - Connect: `bun -e "let u='wss://'+process.argv[2]+'/ws'; const ws=new WebSocket(u); ws.addEventListener('open',()=>{console.log('OPEN'); ws.send('ping')}); ws.addEventListener('message',ev=>{console.log('MSG '+ev.data); ws.close();}); ws.addEventListener('close',()=>process.exit(0));" <HOSTNAME>`
+  - Expect: `OPEN` then `MSG echo:ping`.
+
 ## Quickstart (Bun)
 
 - Install dependencies:
