@@ -17,6 +17,8 @@
     "dev:worker": "bun x wrangler dev --config worker/wrangler.jsonc",
     "deploy:worker": "bun x wrangler deploy --config worker/wrangler.jsonc",
     "tunnel": "bun desktop-helper.ts",
+    "mcp:test": "bun scripts/test-mcp.ts",
+    "mcp:test:full": "bun scripts/test-mcp.ts --create --revoke",
     "cf:secret:api-token": "bun x wrangler secret put CF_API_TOKEN --config worker/wrangler.jsonc",
     "cf:secret:account-id": "bun x wrangler secret put CF_ACCOUNT_ID --config worker/wrangler.jsonc",
     "cf:secret:zone-id": "bun x wrangler secret put CF_ZONE_ID --config worker/wrangler.jsonc",

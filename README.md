@@ -77,6 +77,40 @@ Cloudburrow is a Bun/TypeScript project that enables secure, per‑device Cloudf
 
 This repo currently scaffolds the project and documentation. Broker, client integration, and MCP endpoints will be added incrementally with Bun‑first tooling.
 
+## MCP Tools Test Script
+
+Use the included script to exercise the MCP server running on the Cloudflare Worker.
+
+- Worker MCP URL: `https://cloudburrow-broker.openagents.com/mcp`
+- Script: `scripts/test-mcp.ts`
+
+Run with Bun:
+
+```bash
+# List tools and announce a link (no mutations)
+bun scripts/test-mcp.ts --url https://cloudburrow-broker.openagents.com/mcp \
+  --hostname cloudburrow-broker.openagents.com
+
+# Full lifecycle: create → status → revoke (mutates Cloudflare via the Worker)
+bun scripts/test-mcp.ts --url https://cloudburrow-broker.openagents.com/mcp \
+  --hostname cloudburrow-broker.openagents.com --create --revoke
+```
+
+What we tested and how it performed:
+
+- initialize: Handshake succeeded using MCP protocol `2025-06-18`.
+- tools/list: Reported four tools — `tunnel.announce_link`, `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`.
+- tunnel.announce_link: Returned the expected `wss://<hostname>/ws` link.
+- tunnel.create_named: Successfully minted a named tunnel and DNS hostname; connector token is not returned by MCP (by design).
+- tunnel.status: Returned `connected=false` immediately after creation (expected until a connector attaches), with `lastSeen` absent or `n/a`.
+- tunnel.revoke: Successfully revoked the created tunnel and cleaned up DNS best‑effort.
+
+Notes:
+
+- The test script uses JSON‑RPC 2.0 over HTTP with the `MCP-Protocol-Version` header set to the server’s supported version.
+- `--create` and `--revoke` trigger real Cloudflare API calls via the Worker; ensure the Worker has `CF_API_TOKEN`, `CF_ACCOUNT_ID`, and `CF_ZONE_ID` configured.
+- You can pass `--tunnelId <id>` to check status for an existing tunnel without creating a new one.
+
 ## Cloudflare Worker (Broker)
 
 - Deploy/dev commands (Wrangler via Bun):

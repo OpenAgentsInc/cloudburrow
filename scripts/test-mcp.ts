@@ -120,7 +120,10 @@ async function main() {
   const doRevoke = args.revoke === true || args.revoke === 'true';
 
   // 1) Initialize (optional but good practice)
-  const init = await rpc(url, 'initialize', { name: 'cloudburrow-mcp-test', version: '0.0.1' });
+  const init = await rpc(url, 'initialize', {
+    protocolVersion: '2025-06-18',
+    clientInfo: { name: 'cloudburrow-mcp-test', version: '0.0.1' },
+  });
   console.log('initialize.ok');
 
   // 2) List tools
@@ -142,7 +145,11 @@ async function main() {
       arguments: { deviceHint: 'mcp-test' },
     });
     console.log('tunnel.create_named:', JSON.stringify(createRes));
-    const sc = (createRes as any).result?.structuredContent || (createRes as any).result || createRes;
+    const sc =
+      (createRes as any).structuredContent ||
+      (createRes as any).result?.structuredContent ||
+      (createRes as any).result ||
+      createRes;
     if (sc?.tunnelId && sc?.hostname) {
       created = { tunnelId: sc.tunnelId, hostname: sc.hostname, createdAt: sc.createdAt };
     }
@@ -172,4 +179,3 @@ main().catch((err) => {
   console.error('MCP test failed:', err?.message || err);
   process.exit(1);
 });
-
