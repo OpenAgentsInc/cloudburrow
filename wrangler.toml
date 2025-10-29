@@ -1,0 +1,7 @@
+name = "cloudburrow-worker"
+main = "worker/src/index.ts"
+compatibility_date = "2025-10-28"
+
+# Note: deploy/dev use scripts that point at worker/wrangler.jsonc.
+# This root file exists so running `wrangler secret put <NAME>` from repo root
+# has a Worker name to target.
