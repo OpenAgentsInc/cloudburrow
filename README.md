@@ -179,3 +179,20 @@ Notes:
 - QUIC/UDP warnings are expected on restricted networks. We force HTTP/2; look for “Registered tunnel connection … protocol=http2”.
 - If you see “Unable to reach the origin service … 127.0.0.1:8787”, ensure your local service is listening and only one `cloudflared` is running.
 - If DNS hasn’t propagated yet for the hostname, wait a few seconds and retry.
+
+## Future Work
+
+What works today
+- MCP server on Cloudflare Worker: initialize, list tools, and call tools end‑to‑end.
+- Tunnel lifecycle via Worker: create, status, revoke (Cloudflare API‑backed).
+- Local helper to run a connector: `bun run tunnel` (requires `cloudflared` installed).
+
+Planned enhancements
+- Packaged library and CLI binary for easy drop‑in to apps (embed the broker/MCP client utilities with minimal setup).
+- Desktop bridge service with token‑gated WebSocket endpoint and hardened auth flows.
+- Client SDKs for TypeScript to orchestrate tunnel lifecycle and parse MCP responses.
+- Observability: structured logs, metrics, traces; improved diagnostics in MCP outputs.
+- Retry/backoff policies and DNS readiness checks; graceful cleanup and recovery.
+- Security hardening for broker endpoints (fine‑grained auth, signed handoffs, optional mTLS).
+- Additional MCP tools (list/describe tunnels, rotate hostnames, emit health summaries).
+- Automated tests via `bun test` covering MCP flows and broker edge cases.
