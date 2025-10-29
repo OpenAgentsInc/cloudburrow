@@ -28,7 +28,7 @@ In plain English, here’s what you can do right now:
   - Auto‑install `cloudflared` to a user directory if missing.
   - Call the broker to mint a tunnel and persist `{ token, hostname, tunnelId }`.
   - Launch the connector and emit a pairing payload with `provider: "cloudflare"` and `bridge: wss://<hostname>/ws`.
-  - Keep Convex local (e.g., `http://127.0.0.1:7788`).
+  
 
 - Desktop Bridge (Rust, `/ws`)
   - Requires a bridge token via `Authorization: Bearer` or `?token=`.
@@ -48,6 +48,38 @@ In plain English, here’s what you can do right now:
 - MCP endpoint `/mcp` is enabled with tools: `tunnel.create_named`, `tunnel.status`, `tunnel.revoke`, `tunnel.announce_link`.
 - DNS propagation for newly minted hostnames typically completes within ~5–10 seconds.
 - Desktop helper available: `bun run tunnel` to mint + run a connector and print the public `wss://…/ws` URL.
+
+## MCP Tools
+
+- Plain-language overview
+  - A “tunnel” is the secure pipe Cloudflare creates from a public hostname to your local machine (the pipe comes alive when your `cloudflared` connector runs).
+  - The `wss://<hostname>/ws` “link” is just the URL clients use to connect through that tunnel to your app.
+  - You use create/status/revoke to manage the pipe, and announce_link to print the exact URL you’ll share or dial.
+
+- `tunnel.announce_link`
+  - Input: `{ hostname: string }`
+  - Returns: `wss://<hostname>/ws` as a structured link for clients to display or use.
+  - Notes: No tunnel is created; this only formats the public WebSocket URL for a host.
+  - Reason: So UIs/agents can show or store the precise URL without guessing paths or protocols.
+
+- `tunnel.create_named`
+  - Input: `{ deviceHint?: string }`
+  - Creates a named Cloudflare Tunnel and DNS CNAME (proxied) for a unique hostname.
+  - Returns: `{ tunnelId: string, hostname: string, createdAt: string }`
+  - Notes: The connector `token` is never returned by MCP (by design). Use broker REST to run a connector.
+  - Reason: Allocate a fresh, unique public pipe + name you control for a device/session.
+
+- `tunnel.status`
+  - Input: `{ tunnelId: string }`
+  - Checks whether a connector is currently attached to the tunnel.
+  - Returns: `{ connected: boolean, lastSeen?: string }`
+  - Reason: Tell if your local connector is online yet; great for readiness checks and health.
+
+- `tunnel.revoke`
+  - Input: `{ tunnelId: string, hostname?: string }`
+  - Deletes the Cloudflare Tunnel and attempts best‑effort DNS cleanup if `hostname` provided.
+  - Returns: `{ ok: true }` on success.
+  - Reason: Cleanly shut down and remove public exposure when you’re done, or when rotating.
 
 ### Verification Details (what we tested)
 
@@ -82,38 +114,6 @@ In plain English, here’s what you can do right now:
   ```
 
 This repo currently scaffolds the project and documentation. Broker, client integration, and MCP endpoints will be added incrementally with Bun‑first tooling.
-
-## MCP Tools
-
-- Plain-language overview
-  - A “tunnel” is the secure pipe Cloudflare creates from a public hostname to your local machine (the pipe comes alive when your `cloudflared` connector runs).
-  - The `wss://<hostname>/ws` “link” is just the URL clients use to connect through that tunnel to your app.
-  - You use create/status/revoke to manage the pipe, and announce_link to print the exact URL you’ll share or dial.
-
-- `tunnel.announce_link`
-  - Input: `{ hostname: string }`
-  - Returns: `wss://<hostname>/ws` as a structured link for clients to display or use.
-  - Notes: No tunnel is created; this only formats the public WebSocket URL for a host.
-  - Reason: So UIs/agents can show or store the precise URL without guessing paths or protocols.
-
-- `tunnel.create_named`
-  - Input: `{ deviceHint?: string }`
-  - Creates a named Cloudflare Tunnel and DNS CNAME (proxied) for a unique hostname.
-  - Returns: `{ tunnelId: string, hostname: string, createdAt: string }`
-  - Notes: The connector `token` is never returned by MCP (by design). Use broker REST to run a connector.
-  - Reason: Allocate a fresh, unique public pipe + name you control for a device/session.
-
-- `tunnel.status`
-  - Input: `{ tunnelId: string }`
-  - Checks whether a connector is currently attached to the tunnel.
-  - Returns: `{ connected: boolean, lastSeen?: string }`
-  - Reason: Tell if your local connector is online yet; great for readiness checks and health.
-
-- `tunnel.revoke`
-  - Input: `{ tunnelId: string, hostname?: string }`
-  - Deletes the Cloudflare Tunnel and attempts best‑effort DNS cleanup if `hostname` provided.
-  - Returns: `{ ok: true }` on success.
-  - Reason: Cleanly shut down and remove public exposure when you’re done, or when rotating.
 
 ## MCP Tools Test Script
 
