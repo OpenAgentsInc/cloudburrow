@@ -3,17 +3,20 @@
  *
  * Usage:
  *   bun scripts/test-mcp.ts --url https://cloudburrow-broker.openagents.com/mcp \
- *     [--hostname tunnel-demo.example.com] [--create] [--revoke]
+ *     [--hostname cloudburrow-broker.openagents.com] [--create] [--revoke] [--tunnelId <id>]
  *
  * Defaults:
  *   --url      -> https://cloudburrow-broker.openagents.com/mcp
  *   --hostname -> cloudburrow-broker.openagents.com
  *
- * Notes:
- * - This script uses JSON-RPC 2.0 over HTTP to call MCP methods.
- * - It lists tools, calls `tunnel.announce_link`, and optionally
- *   creates and revokes a tunnel if `--create` or `--revoke` are provided.
+ * What it does:
+ * - Step 1: initialize MCP session
+ * - Step 2: list available tools
+ * - Step 3: announce a wss:// link for the provided hostname
+ * - Optional: create a tunnel, check its status, and revoke it
  */
+
+import chalk from 'chalk';
 
 type JsonRpcRequest = {
   jsonrpc: '2.0';
@@ -45,7 +48,6 @@ async function rpc<T = unknown>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // Match mcp-lite supported protocol to avoid mismatch warnings
       'MCP-Protocol-Version': '2025-06-18',
     },
     body: JSON.stringify(body),
@@ -73,7 +75,7 @@ function parseArgs(argv: string[]) {
     if (a.startsWith('--')) {
       const [key, val] = a.includes('=') ? a.split('=') : [a, argv[i + 1]];
       const name = key.replace(/^--/, '');
-      if (val === undefined || val.startsWith('--')) {
+      if (val === undefined || (typeof val === 'string' && val.startsWith('--'))) {
         out[name] = true;
       } else {
         out[name] = val;
@@ -97,7 +99,6 @@ function ensureMcpUrl(input?: string): string {
     const u = new URL(input);
     return u.href;
   } catch {
-    // If a base without path is provided, append /mcp
     try {
       const base = new URL(input.includes('://') ? input : `https://${input}`);
       if (!base.pathname || base.pathname === '/') base.pathname = '/mcp';
@@ -119,32 +120,57 @@ async function main() {
   const doCreate = args.create === true || args.create === 'true';
   const doRevoke = args.revoke === true || args.revoke === 'true';
 
-  // 1) Initialize (optional but good practice)
-  const init = await rpc(url, 'initialize', {
+  // Header
+  console.log(chalk.bold.cyan('\nCloudburrow MCP Server Test'));
+  console.log(chalk.dim('Target URL: ') + chalk.dim.underline(url));
+  console.log(chalk.dim('Hostname  : ') + chalk.dim(hostname));
+  console.log('');
+
+  // Step 1: Initialize
+  console.log(chalk.bold('Step 1: Initialize MCP'));
+  console.log(chalk.dim('- negotiates protocol and fetches server info'));
+  await rpc(url, 'initialize', {
     protocolVersion: '2025-06-18',
     clientInfo: { name: 'cloudburrow-mcp-test', version: '0.0.1' },
   });
-  console.log('initialize.ok');
+  console.log(chalk.green('✓ initialize ok'));
+  console.log('');
 
-  // 2) List tools
+  // Step 2: List tools
+  console.log(chalk.bold('Step 2: List tools'));
+  console.log(chalk.dim('- discover available actions'));
   const tools = await rpc<{ tools: Array<{ name: string; description?: string }> }>(url, 'tools/list');
-  console.log('tools:', tools.tools.map((t) => t.name).join(', '));
+  console.log(chalk.green('✓ tools listed'));
+  console.log('  ' + tools.tools.map((t) => chalk.yellow(t.name)).join(chalk.dim(', ')));
+  console.log('');
 
-  // 3) Call announce_link
+  // Step 3: Announce link
+  console.log(chalk.bold('Step 3: Announce link'));
+  console.log(chalk.dim('- get the public wss:// URL for this host'));
   const announce = await rpc(url, 'tools/call', {
     name: 'tunnel.announce_link',
     arguments: { hostname },
   });
-  console.log('tunnel.announce_link:', JSON.stringify(announce));
+  const wss = (announce as any)?.structuredContent?.wss;
+  if (wss) {
+    console.log(chalk.green('✓ announce_link ok'));
+    console.log('  link: ' + chalk.bold(wss));
+  } else {
+    console.log(chalk.yellow('! announce_link returned without structured link'));
+    console.log('  raw:  ' + JSON.stringify(announce));
+  }
+  console.log('');
 
-  // 4) Optionally create a tunnel (mutative)
+  // Step 4: Create tunnel (optional)
   let created: { tunnelId: string; hostname: string; createdAt: string } | undefined;
   if (doCreate) {
+    console.log(chalk.bold('Step 4: Create tunnel'));
+    console.log(chalk.dim('- mint a named tunnel and DNS (token is not returned by MCP)'));
     const createRes = await rpc(url, 'tools/call', {
       name: 'tunnel.create_named',
       arguments: { deviceHint: 'mcp-test' },
     });
-    console.log('tunnel.create_named:', JSON.stringify(createRes));
+    console.log(chalk.green('✓ create_named ok'));
     const sc =
       (createRes as any).structuredContent ||
       (createRes as any).result?.structuredContent ||
@@ -152,30 +178,50 @@ async function main() {
       createRes;
     if (sc?.tunnelId && sc?.hostname) {
       created = { tunnelId: sc.tunnelId, hostname: sc.hostname, createdAt: sc.createdAt };
+      console.log('  id:       ' + chalk.bold(created.tunnelId));
+      console.log('  hostname: ' + chalk.bold(created.hostname));
+      console.log('  created:  ' + chalk.dim(created.createdAt));
     }
+    console.log('');
   }
 
-  // 5) Optionally query status
+  // Step 5: Status (optional)
   const statusTunnelId = args.tunnelId || created?.tunnelId;
   if (statusTunnelId) {
+    console.log(chalk.bold('Step 5: Check status'));
+    console.log(chalk.dim('- see if a connector is attached'));
     const statusRes = await rpc(url, 'tools/call', {
       name: 'tunnel.status',
       arguments: { tunnelId: statusTunnelId },
     });
-    console.log('tunnel.status:', JSON.stringify(statusRes));
+    const sc = (statusRes as any).structuredContent || (statusRes as any).result || statusRes;
+    const connected = !!sc?.connected;
+    const lastSeen = sc?.lastSeen ?? 'n/a';
+    console.log((connected ? chalk.green('✓ connected') : chalk.yellow('• not connected')) + chalk.dim(` (lastSeen: ${lastSeen})`));
+    if (!connected) {
+      console.log('  ' + chalk.dim('Tip: run ') + chalk.dim.bold('bun run tunnel') + chalk.dim(' to start a local connector, then re-check status.'));
+    }
+    console.log('');
   }
 
-  // 6) Optionally revoke
+  // Step 6: Revoke (optional)
   if (doRevoke && created?.tunnelId) {
+    console.log(chalk.bold('Step 6: Revoke tunnel'));
+    console.log(chalk.dim('- delete the tunnel and clean up DNS (best-effort)'));
     const revokeRes = await rpc(url, 'tools/call', {
       name: 'tunnel.revoke',
       arguments: { tunnelId: created.tunnelId, hostname: created.hostname },
     });
-    console.log('tunnel.revoke:', JSON.stringify(revokeRes));
+    const sc = (revokeRes as any).structuredContent || (revokeRes as any).result || revokeRes;
+    console.log(sc?.ok ? chalk.green('✓ revoke ok') : chalk.yellow('! revoke response unclear'));
+    console.log('');
   }
+
+  console.log(chalk.dim('Done.'));
 }
 
 main().catch((err) => {
-  console.error('MCP test failed:', err?.message || err);
+  console.error(chalk.red('MCP test failed:'), err?.message || err);
   process.exit(1);
 });
+
